@@ -5,8 +5,6 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const app = express();
 const PORT = 4000;
-
-// Connect to MongoDB databases
 const vegetablesDB = mongoose.createConnection('mongodb://localhost:27017/vegetables', {
     useNewUrlParser: true,
     useUnifiedTopology: true
@@ -26,17 +24,10 @@ vegetablesDB.on('connected', () => console.log('Connected to vegetables database
 usersDB.on('connected', () => console.log('Connected to users database'));
 customersDB.on('connected', () => console.log('Connected to customers database'));
 
-// Define schemas and models
-// ... (keep the existing schema and model definitions)
 
 vegetablesDB.on('connected', () => console.log('Connected to vegetables database'));
 usersDB.on('connected', () => console.log('Connected to users database'));
 customersDB.on('connected', () => console.log('Connected to customers database'));
-
-// Define schemas and models (Customer, User, Vegetable)
-// ... (keep the existing schema and model definitions)
-
-// Define Customer Schema
 const CustomerSchema = new mongoose.Schema({
     name: String,
     address: String,
@@ -58,8 +49,6 @@ const UserSchema = new mongoose.Schema({
 });
 
 const User = usersDB.model('User', UserSchema);
-
-// Define Vegetable Schema
 const VegetableSchema = new mongoose.Schema({
     name: String,
     quantity: Number,
@@ -74,8 +63,6 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
-
-// Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(500).json({ message: 'Internal server error', error: err.message });
@@ -235,7 +222,7 @@ app.post('/login', async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
-
+// Signup route
 app.post('/signup', async (req, res) => {
     const { username, password } = req.body;
 
