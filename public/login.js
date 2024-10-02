@@ -6,7 +6,7 @@ const path = require('path');
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public'))); // Serve static files from 'public' directory
+app.use(express.static(path.join(__dirname, 'public'))); // Serve files from 'public' directory
 
 mongoose.connect('mongodb://localhost:27017/otp_login', {
     useNewUrlParser: true,
@@ -31,7 +31,7 @@ app.get('/', (req, res) => {
 });
 
 
-// Handle login POST request
+//Login POST request
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
@@ -47,8 +47,6 @@ app.post('/login', async (req, res) => {
             console.log(`User not found: ${username}`);
             return res.status(404).json({ message: 'User not found. Please register.' });
         }
-
-        // Compare plain text passwords (Note: This is not secure, use hashing in production)
         if (password !== user.password) {
             console.log(`Invalid password for user: ${username}`);
             return res.status(401).json({ message: 'Invalid credentials' });
