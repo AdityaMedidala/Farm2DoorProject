@@ -1,0 +1,60 @@
+/* Global Styles */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 0 15px;
+}
+
+/* Navbar Styles */
+.navbar {
+    background-color: #2c5e1a !important; /* Consistent with login page */
+}
+
+.navbar-brand {
+    color: #fff !important;
+}
+
+.navbar-nav .nav-link {
+    color: #fff !important;
+}
+
+.navbar-nav .nav-link:hover {
+    color: #ffd700 !important; /* Gold hover effect */
+}
+
+/* Hero Section Styles */
+.hero-section {
+    text-align: center;
+    padding: 150px 0;
+    background-color: #f0f8ea; /* Matching background with login page */
+}
+
+.hero-section h1 {
+    font-size: 4rem;
+    font-weight: bold;
+    margin-bottom: 30px;
+    color: #2c5e1a; /* Dark green for contrast */
+}
+
+.hero-section p {
+    font-size: 1.5rem; /* Increased size for better visibility */
+    margin-bottom: 40px;
+    color: #333; /* Dark text for contrast against light background */
+}
+
+.hero-section img {
+    max-width: 600px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Footer Styles */
+footer {
+    background-color: #2c5e1a; /* Consistent with navbar */
+}
