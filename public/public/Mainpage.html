@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farm to Door</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #e8f5e9;
+            font-family: 'Arial', sans-serif;
+        }
+        .vegetables-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            padding: 20px;
+        }
+        .vegetable-image {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin: 0 auto 15px;
+            transition: transform 0.3s ease;
+        }
+        .vegetable-image:hover {
+            transform: scale(1.05);
+        }
+        .btn-success {
+            background-color: #4caf50;
+            border-color: #4caf50;
+            transition: all 0.3s ease;
+        }
+        .btn-success:hover {
+            background-color: #45a049;
+            border-color: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .logo {
+            max-width: 70%;
+            height: auto;
+            max-height: 100px;
+        }
+        .card {
+            background-color: #f1f8e9;
+            border-color: #81c784;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        .card-title {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+        .price {
+            font-weight: bold;
+            color: #43a047;
+            font-size: 1.2em;
+        }
+        #checkoutSection {
+            background-color: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        #cart {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 10px 20px;
+            font-size: 1.2em;
+        }
+        .modal-content {
+            border-radius: 15px;
+        }
+        .modal-header {
+            background-color: #4caf50;
+            color: white;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container mt-3">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <img src="Farm.jpg" class="logo" alt="Farm to Door Logo">
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group mb-3">
+                        <input id="searchInput" type="text" class="form-control" placeholder="Search for vegetables...">
+                        <div class="input-group-append">
+                            <button class="btn btn-success" type="button" onclick="filterVegetables()"><i class="fas fa-search"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="container mt-3" id="vegetablesSection">
+        <div class="row vegetables-section">
+            <!-- Vegetables will be dynamically loaded here -->
+        </div>
+    </section>
+
+    <section class="container mt-5 mb-5" id="checkoutSection">
+        <h2 class="text-success mb-4">Checkout</h2>
+        <div class="mb-3">Total: <span id="totalPrice" class="text-success font-weight-bold">₹ 0.00</span></div>
+        <form id="checkoutForm">
+            <div class="form-group">
+                <label for="billingName">Name</label>
+                <input type="text" class="form-control" id="billingName" placeholder="Enter your name" required>
+            </div>
+            <div class="form-group">
+                <label for="billingAddress">Address</label>
+                <input type="text" class="form-control" id="billingAddress" placeholder="Enter your address" required>
+            </div>
+            <button type="submit" class="btn btn-success btn-lg">Submit Order</button>
+        </form>
+    </section>
+
+    <button class="btn btn-success btn-lg" id="cart" onclick="showCart()">Cart (0)</button>
+<!-- Thank You Modal -->
+<div class="modal fade" id="thankYouModal" tabindex="-1" role="dialog" aria-labelledby="thankYouModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="thankYouModalLabel">Thank You!</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Your order has been placed successfully. Thank you for shopping with Farm to Door!</p>
+            </div>
+        </div>
+    </div>
+</div>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+    let cartItems = [];
+    let total = 0;
+
+    function loadVegetables() {
+        fetch('/api/vegetables')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(vegetables => {
+                console.log('Received vegetables:', vegetables);
+                const vegetablesSection = document.querySelector('.vegetables-section');
+                vegetablesSection.innerHTML = '';
+                if (vegetables.length === 0) {
+                    vegetablesSection.innerHTML = '<p>No vegetables available at the moment.</p>';
+                } else {
+                    vegetables.forEach(vegetable => {
+                        const vegetableCard = createVegetableCard(vegetable);
+                        vegetablesSection.appendChild(vegetableCard);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error loading vegetables:', error);
+                const vegetablesSection = document.querySelector('.vegetables-section');
+                vegetablesSection.innerHTML = '<p>Error loading vegetables. Please try again later.</p>';
+            });
+    }
+
+    function createVegetableCard(vegetable) {
+        const card = document.createElement('div');
+        card.className = 'col-md-3 mb-3';
+        card.innerHTML = `
+            <div class="card" data-id="${vegetable._id}">
+                <img class="card-img-top vegetable-image" src="${vegetable.imageUrl}" alt="${vegetable.name}">
+                <div class="card-body">
+                    <h5 class="card-title">${vegetable.name}</h5>
+                    <p class="card-text">${vegetable.description}</p>
+                    <p class="price">Price: ₹${vegetable.price}</p>
+                    <p>In Stock: <span class="stock">${vegetable.quantity}</span></p>
+                    <button class="btn btn-success" onclick="addToCart('${vegetable._id}', '${vegetable.name}', ${vegetable.price})">Add to Cart</button>
+                </div>
+            </div>
+        `;
+        return card;
+    }
+
+    function addToCart(id, item, price) {
+        fetch('/api/cart/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ vegetableId: id, quantity: 1 }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                if (data.availableQuantity === 0) {
+                    alert('Out of stock!');
+                } else {
+                    alert(data.error);
+                }
+                return;
+            }
+            const existingItem = cartItems.find(cartItem => cartItem.id === id);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cartItems.push({ id, item, price, quantity: 1 });
+            }
+            total += price;
+            updateCartCount();
+            updateTotalPrice();
+            updateStock(id, data.vegetable.quantity);
+        })
+        .catch(error => {
+            console.error('Error adding to cart:', error);
+            alert('Error adding to cart. Please try again.');
+        });
+    }
+
+    function removeFromCart(id, price) {
+        fetch('/api/cart/remove', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ vegetableId: id, quantity: 1 }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+            
+            const cartItem = cartItems.find(item => item.id === id);
+            if (cartItem) {
+                cartItem.quantity -= 1;
+                total -= price;
+                
+                if (cartItem.quantity === 0) {
+                    const index = cartItems.findIndex(item => item.id === id);
+                    cartItems.splice(index, 1);
+                }
+                
+                updateCartCount();
+                updateTotalPrice();
+                updateStock(id, data.vegetable.quantity);
+                showCart();
+            }
+        })
+        .catch(error => {
+            console.error('Error removing from cart:', error);
+            alert('Error removing from cart. Please try again.');
+        });
+    }
+
+    function updateStock(id, newQuantity) {
+        const card = document.querySelector(`.card[data-id="${id}"]`);
+        if (card) {
+            const stockElement = card.querySelector('.stock');
+            if (stockElement) {
+                stockElement.textContent = newQuantity;
+            }
+        }
+    }
+
+    function updateCartCount() {
+        document.getElementById('cart').textContent = `Cart (${cartItems.reduce((acc, item) => acc + item.quantity, 0)})`;
+    }
+
+    function updateTotalPrice() {
+        document.getElementById('totalPrice').textContent = `₹ ${total.toFixed(2)}`;
+    }
+
+    function showCart() {
+        let cartContent = '';
+        if (cartItems.length === 0) {
+            cartContent = '<p>Your cart is empty.</p>';
+        } else {
+            cartContent = '<ul class="list-group">';
+            cartItems.forEach(item => {
+                cartContent += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        ${item.item} - ₹${item.price} x ${item.quantity}
+                        <button class="btn btn-sm btn-danger" onclick="removeFromCart('${item.id}', ${item.price})">Remove</button>
+                    </li>`;
+            });
+            cartContent += '</ul>';
+            cartContent += `<p class="mt-3"><strong>Total Price: ₹${total.toFixed(2)}</strong></p>`;
+        }
+        
+        document.getElementById('cartModalBody').innerHTML = cartContent;
+        $('#cartModal').modal('show');
+    }
+
+    function filterVegetables() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const cards = document.querySelectorAll('.card');
+        cards.forEach(card => {
+            const title = card.querySelector('.card-title').textContent.toLowerCase();
+            if (title.includes(searchTerm)) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    $(document).ready(function() {
+        $('#thankYouModal').on('hidden.bs.modal', function (event) {
+            window.location.href = '/';
+        });
+
+        document.getElementById('thankYouModalLabel').textContent = 'Thank You!';
+
+        document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+    
+            if (cartItems.length === 0) {
+                alert('Your cart is empty. Please add items before checking out.');
+                return;
+            }
+
+            const name = document.getElementById('billingName').value;
+            const address = document.getElementById('billingAddress').value;
+
+            fetch('/api/checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    items: cartItems,
+                    name: name,
+                    address: address
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                $('#thankYouModal').modal('show');
+                cartItems = [];
+                total = 0;
+                updateCartCount();
+                updateTotalPrice();
+                loadVegetables();
+            })
+            .catch(error => {
+                console.error('Error during checkout:', error);
+                alert('Error during checkout. Please try again.');
+            });
+        });
+
+        loadVegetables();
+
+        document.getElementById('searchInput').addEventListener('input', filterVegetables);
+    });
+</script>
+<!-- Add this just before the closing </body> tag -->
+<div class="modal fade" id="cartModal" tabindex="-1" role="dialog" aria-labelledby="cartModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cartModalLabel">Your Cart</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="cartModalBody">
+                <!-- Cart items will be dynamically inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
